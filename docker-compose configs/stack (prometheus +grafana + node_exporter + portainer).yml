@@ -1,0 +1,112 @@
+##########################################
+#####           PREPARING            #####
+##########################################
+
+# mkdir /etc/prometheus/
+# touch /etc/prometheus/prometheus.yml
+# mkdir /data
+# touch /prometheus.yml
+
+
+# docker swarm init --advertise-addr $(hostname -i)
+#docker swarm join --token SWMTKN-1-0yplb3j6158x4ocjxnwgguvjv4ievviofi12a0d6o9pw8o8rfr-81gw6ic3o6cod0f0ulwj4mr4w 192.168.0.7:2377
+
+# docker stack deploy --compose-file docker-compose.yml belyaev-app
+
+# docker stop $(docker ps -q)
+
+version: '3.0'
+
+networks:
+  monitoring:
+    driver: bridge
+    
+volumes:
+  prometheus_data: {}
+
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - '9090:9090'
+
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - '9100:9100'
+
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      GF_SERVER_DOMAIN: grafana.sw.dockerswarm.rocks
+      GF_SERVER_ROOT_URL: https://grafana.sw.dockerswarm.rocks
+      #GF_DATABASE_TYPE: postgres
+      #GF_DATABASE_HOST: data-01:5432
+      #GF_DATABASE_NAME: grafana
+      #GF_DATABASE_USER: grafana
+      #GF_DATABASE_PASSWORD:
+      #GF_REMOTE_CACHE_TYPE: redis
+      #GF_REMOTE_CACHE_CONNSTR: addr=data-01:6379,pool_size=100,db=0,ssl=false
+    #volumes:
+      #- /etc/hosts:/etc/hosts
+      #- /mnt/storage-pool/grafana:/var/lib/grafana
+    
+    ports:
+      - '3000:3000'
+
+
+
+
+
+
+
+
+
+
+
+
+
+#  portainer:
+#    image: portainer/portainer
+#    container_name: portainer
+#    command: -H tcp://tasks.agent:9001 --tlsskipverify
+#    ports:
+#      - '9000:9000'
+#    volumes:
+#      - ./portainer_data:/data
+#    #networks:
+#    #  - agent_network
+#    deploy:
+#      mode: replicated
+#      replicas: 1
+#      placement:
+#        constraints: [node.role == manager]
+
+
+########################################################
+##       docker-compose up -d --remove-orphans        ##
+########################################################
