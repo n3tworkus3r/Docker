@@ -2,6 +2,7 @@
 
 
 mkdir /var/lib/grafana 
+mkdir /etc/nginx 
 mkdir /etc/prometheus/
 touch /etc/prometheus/prometheus.yml
 mkdir /data
@@ -22,8 +23,20 @@ docker stack deploy -c stack.yml belyaev
 docker service ls
 
 
+
+
+docker-compose up -d /nginx.yml 
+
+
 touch /portainer.yml
 vi /portainer.yml
+
+
+rm nginx.yml
+touch /nginx.yml
+vi /nginx.yml
+
+docker stack deploy -c /nginx.yml nginx_app
 
 docker stack deploy -c /portainer.yml portainer_app
 docker service ls
