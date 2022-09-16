@@ -1,12 +1,6 @@
-cd /
-rm new_portainer.yml
-touch new_portainer.yml
-vi new_portainer.yml
-
-docker stack deploy -c portainer.yml portainer
 
 
-mkdir /etc/hosts
+
 mkdir /var/lib/grafana 
 mkdir /etc/prometheus/
 touch /etc/prometheus/prometheus.yml
@@ -23,6 +17,15 @@ vi stack.yml
 
 
 docker swarm init --advertise-addr $(hostname -i)
+
 docker stack deploy -c stack.yml belyaev
-docker ps -a
-docker ps
+docker service ls
+
+
+touch /portainer.yml
+vi /portainer.yml
+
+docker stack deploy -c /portainer.yml portainer_app
+docker service ls
+
+sudo tail -f /var/log/messages | grep docker

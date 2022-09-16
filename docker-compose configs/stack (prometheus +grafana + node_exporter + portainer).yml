@@ -15,14 +15,18 @@
 
 # docker stop $(docker ps -q)
 
-version: '3.0'
+version: '3.2'
 
 networks:
   monitoring:
     driver: bridge
+  agent_network:
+    driver: overlay
+
     
 volumes:
   prometheus_data: {}
+  portainer_data:
 
 
 services:
@@ -77,6 +81,7 @@ services:
     
     ports:
       - '3000:3000'
+
 
 
 

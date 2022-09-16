@@ -1,72 +1,38 @@
-##########################################
-#####           PREPARING            #####
-##########################################
-
-# mkdir /etc/prometheus/
-# touch /etc/prometheus/prometheus.yml
-# mkdir /data
-# touch /prometheus.yml
-
-
-# docker swarm init --advertise-addr $(hostname -i)
-# docker swarm join --token SWMTKN-1-0yplb3j6158x4ocjxnwgguvjv4ievviofi12a0d6o9pw8o8rfr-81gw6ic3o6cod0f0ulwj4mr4w 192.168.0.7:2377
-
-# docker stack deploy --compose-file portainer.yml portainer-app
-
-# docker stop $(docker ps -q)
-
-
-##########################################
-#####           FOR SWARM            #####
-##########################################
-version: '3'
-
-networks:
-  monitoring:
-    driver: bridge
-    
-volumes:
-  prometheus_data: {}
-
+version: '3.2'
 
 services:
-#  portainer:
-#    image: portainer/portainer-ce:latest
-#    restart: unless-stopped
-#    security_opt:
-#      - no-new-privileges:true
-#    volumes:
-#      #- /etc/localtime:/etc/localtime:ro
-#      #- /var/run/docker.sock:/var/run/docker.sock:ro
-#      - ./portainer-data:/data
-#    ports:
-#      - '9000:9000'
-
-
-
-
-
-
-
-
+  agent:
+    image: portainer/agent
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+    networks:
+      - agent_network
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.platform.os == linux]
 
   portainer:
-    image: portainer/portainer
-    container_name: portainer
-    command: -H tcp://tasks.agent:9001 --tlsskipverify
+    image: portainer/portainer-ce
+    #command: -H tcp://tasks.agent:9001 --tlsskipverify
     ports:
-      - '9000:9000'
+      - "9000:9000"
+ #     - "8000:8000"
     volumes:
-      - ./portainer_data:/data
-    #networks:
-    #  - agent_network
+      - portainer_data:/data
+    networks:
+      - agent_network
     deploy:
       mode: replicated
       replicas: 1
       placement:
         constraints: [node.role == manager]
 
+networks:
+  agent_network:
+    driver: overlay
+    attachable: true
 
-########################################################
-##       docker-compose up -d --remove-orphans        ##
-########################################################
+volumes:
+  portainer_data:
